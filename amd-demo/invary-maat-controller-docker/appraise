@@ -1,0 +1,214 @@
+#!/invary/venv/bin/python3
+import os
+import subprocess
+import sys
+
+from kubernetes import client, config
+
+ATTESTMGR_PORT="32342"
+HOST = "172.240.2.44"
+APPRAISER = "127.0.0.1"
+GUESTS = ["172.240.6.35", "172.240.15.191", "172.240.23.217", "172.240.29.156"]
+CHECKS = ["invary", "amd_sev_snp"]
+CHECK_SUMMARY = {}
+CHECK_SUMMARY["invary"] = "Checking OS Integrity"
+CHECK_SUMMARY["got_measure"] = "Checking GOT measurement"
+CHECK_SUMMARY["amd_sev_snp"] = "Checking Memory Integrity"
+CHECK_LABELS = {}
+CHECK_LABELS["invary"] = "Invary"
+CHECK_LABELS["got_measure"] = "GOT Measure"
+CHECK_LABELS["amd_sev_snp"] = "AMD SEV-SNP"
+
+CONFIDENTIAL = os.environ.get("CONFIDENTIAL", "True")
+
+debug = False
+enforcing = False
+kubeconfig = False
+demo = False
+
+def main():
+    logo()
+
+    if len(sys.argv) >= 2:
+        global debug, enforcing, kubeconfig, demo
+        debug = "--debug" in sys.argv
+        enforcing = "--enforce" in sys.argv
+        kubeconfig = "--kubeconfig" in sys.argv
+        demo = "--demo" in sys.argv
+
+    if enforcing:
+        print("\x1b[1;31;40m")
+        print("* * * ENFORCING: will make changes to cluster state based on appraisal results. * * *", end="")
+        print("\x1b[0m")
+        print("\n")
+
+    else:
+        print("\nNot enforcing. Will only report on appraisal failures.\n")
+
+    # Configs can be set in Configuration class directly or using helper utility
+    if kubeconfig:
+        config.load_kube_config()
+    else:
+        config.load_incluster_config()
+
+    v1 = client.CoreV1Api()
+    ret = v1.list_node(watch=False)
+    nodes_by_ip = {}
+    for i in ret.items:
+        for address_obj in i.status.addresses:
+            if address_obj.type != "Hostname":
+                ip = address_obj.address
+                nodes_by_ip[ip] = i.metadata.name
+
+    if debug:
+        print(f"Found {len(nodes_by_ip)} K8S nodes")
+        print(nodes_by_ip)
+
+    check_failures = []
+
+    print(f"Checking host: {HOST}")
+    check_failures += appraise(HOST, APPRAISER, CHECKS, nodes_by_ip)
+
+    for guest in GUESTS:
+        print(f"\nChecking guest: {guest}")
+        check_failures += appraise(guest, APPRAISER, CHECKS, nodes_by_ip)
+
+    print("\n\nMaat Attestation Report")
+    print("========================")
+
+    invary_failures = [f for f in check_failures if f == "invary"]
+    no_integrity_failure_count = 1 + len(GUESTS)
+
+    if len(check_failures) == 0:
+        print("Full Integrity")
+    elif len(invary_failures) == no_integrity_failure_count:
+        print("No Integrity")
+    elif len(check_failures) > 0:
+        print("Diminished Integrity")
+
+    print("\n\n")
+
+
+def appraise(measurer, appraiser, checks, nodes_by_ip):
+    failures = [] # default in the absence of any checks
+    for check in checks:
+        print(f"    Running MAAT Provider for {CHECK_LABELS[check]}:")
+        print(f"\t{CHECK_SUMMARY[check]}", end="...", flush=True)
+
+        # FIXME demo code only
+        if check == "amd_sev_snp" and demo:
+            if CONFIDENTIAL == "True":
+                print("PASS")
+                maybe_enforce(measurer, check, True, nodes_by_ip)
+            if CONFIDENTIAL != "True":
+                print("FAIL")
+                failures.append("amd_sev_snp")
+                maybe_enforce(measurer, check, False, nodes_by_ip)
+        # end demo code
+        else:
+            completed_process = subprocess.run(["/opt/maat/bin/test_client", "-l", appraiser, "-a", ATTESTMGR_PORT,
+                                                "-t", measurer, "-p", ATTESTMGR_PORT, "-r", check],
+                                                capture_output=True, text=True)
+            if debug:
+                print(completed_process.stdout)
+
+            if completed_process.returncode == 0:
+                out = completed_process.stdout;
+                # most elegant XML parsing ever known to man
+                if "<result>PASS</result>" in out:
+                    print("PASS")
+                    maybe_enforce(measurer, check, True, nodes_by_ip)
+                else:
+                    failures.append(check)
+                    print("FAIL")
+                    maybe_enforce(measurer, check, False, nodes_by_ip)
+            elif completed_process.returncode == 1:
+                failures.append(check)
+                print("FAIL")
+                maybe_enforce(measurer, check, False, nodes_by_ip)
+            else:
+                failures.append(check)
+                print(f"ERROR")
+
+    return failures
+
+
+def maybe_enforce(ip, check, success, nodes_by_ip):
+    if enforcing and ip in nodes_by_ip:
+        node = nodes_by_ip[ip]
+        print("\x1b[1;31;40m", end="")
+
+        if check == "invary":
+            enforce_invary(ip, node, check, success)
+        elif check == "amd_sev_snp":
+            enforce_amd_sev_snp(ip, node, check, success)
+        elif not success and debug:
+            print(f"\t\t * * * No registered enforcement for check {check}. Please remediate manually!", end="")
+
+        print("\x1b[0m", end="")
+    elif debug:
+        print("Skipping enforcing")
+
+
+def enforce_invary(ip, node_name, check, success):
+    v1 = client.CoreV1Api()
+    integrity_taint = client.V1Taint(
+        key="LacksIntegrity",
+        effect="NoExecute"
+    )
+    node = v1.read_node(name=node_name)
+
+    if success:
+        # clear old taints
+        if node.spec.taints and integrity_taint in node.spec.taints:
+            if debug:
+                print(f"\t\t => Clearing taint {integrity_taint.key} from node {node_name}", end="")
+            node.spec.taints.remove(integrity_taint)
+    else:
+        if debug:
+            print(f"\t\t => Enforcing failed check '{check}' on {ip} by tainting node {node_name} with {integrity_taint.key}", end="")
+        if node.spec.taints:
+            if integrity_taint not in node.spec.taints:
+                node.spec.taints.append(integrity_taint)
+        else:
+            node.spec.taints = [integrity_taint]
+
+    # Update the node
+    v1.patch_node(name=node_name, body=node)
+
+
+def enforce_amd_sev_snp(ip, node_name, check, success):
+    v1 = client.CoreV1Api()
+    integrity_taint = client.V1Taint(
+        key="LacksConfidentiality",
+        effect="NoExecute"
+    )
+    node = v1.read_node(name=node_name)
+
+    if success:
+        # clear old taints
+        if node.spec.taints and integrity_taint in node.spec.taints:
+            if debug:
+                print(f"\t\t => Clearing taint {integrity_taint.key} from node {node_name}", end="")
+            node.spec.taints.remove(integrity_taint)
+    else:
+        if debug:
+            print(f"\t\t => Enforcing failed check '{check}' on {ip} by tainting node {node_name} with {integrity_taint.key}", end="")
+        if node.spec.taints:
+            if integrity_taint not in node.spec.taints:
+                node.spec.taints.append(integrity_taint)
+        else:
+            node.spec.taints = [integrity_taint]
+
+    # Update the node
+    v1.patch_node(name=node_name, body=node)
+
+
+
+def logo():
+    print("")
+    print("Maat Attestation Controller")
+    print("============================")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,57 @@
+apiVersion: v1
+data:
+  invary-selector.xml: "<!--\n# Copyright 2023 United States Government\n# Copyright
+    2024 Invary\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n#
+    you may not use this file except in compliance with the License.\n# You may obtain
+    a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n#
+    Unless required by applicable law or agreed to in writing, software\n# distributed
+    under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES
+    OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the
+    specific language governing permissions and\n# limitations under the License.
+    \n-->\n<!--Selector Policy to choose different userspace measurements\n    based
+    on resource.-->\n<selector_policy>\n    <collection name=\"known-clients\">\n
+    \       <entry>127.0.0.1</entry>\n        <entry>client2</entry>\n        <entry>localhost</entry>\n
+    \       <!-- from host-guest environment -->\n        <entry>192.168.122.1</entry>\n
+    \       <entry>192.168.122.104</entry>\n        <entry>192.168.122.105</entry>\n
+    \       <entry>192.168.122.106</entry>\n\t<entry>192.168.122.107</entry>\n\t<entry>172.240.16.52</entry>\n\t<entry>172.240.11.237</entry>\n\t<entry>172.240.23.8</entry>\n\t<entry>172.240.29.114</entry>\n\t<entry>172.240.3.137</entry>\n\t<entry>172.240.6.35</entry>\n\t<entry>172.240.15.191</entry>\n\t<entry>172.240.2.44</entry>\n
+    \       <entry>172.240.23.217</entry>\n        <entry>172.240.29.156</entry>\n
+    \   </collection>\n\n    <!--Inital Phase and Appraiser Role.\n\tCheck Identity
+    of Client, and offer copland phrase(s)-->\n    <rule role=\"appraiser\" phase=\"initial\">\n
+    \       <match_condition attr=\"client\" operator=\"in\" value=\"known-clients\"/>\n
+    \       <action selector_action=\"accept\">\n            <condition name=\"runtime_measure\"
+    apb_phrase=\"@_1(@_1(@_2((INVARY m) -> SIG))):@_1=1,@_2=2\"/>\n            <condition
+    name=\"amd_sev_snp_measure\" apb_phrase=\"@_1(@_1(@_2((AMD_SEV_SNP m) -> SIG))):@_1=1,@_2=2\"/>\n
+    \           <condition name=\"got_measure\" apb_phrase=\"((USM got) -> SIG)\"/>\n
+    \       </action>\n    </rule>\n\n    <!--Modify Phase and Attester Role.\n\tPossible
+    down-select on copland phrase(s)-->\n    <rule role=\"attester\" phase=\"modify\">\n
+    \       <action selector_action=\"accept\">\n            <condition name=\"runtime_measure\"
+    apb_phrase=\"@_1(@_1(@_2((INVARY m) -> SIG))):@_1=1,@_2=2\"/>\n            <condition
+    name=\"amd_sev_snp_measure\" apb_phrase=\"@_1(@_1(@_2((AMD_SEV_SNP m) -> SIG))):@_1=1,@_2=2\"/>\n
+    \           <condition name=\"got_measure\" apb_phrase=\"((USM got) -> SIG)\"/>\n
+    \       </action>\n    </rule>\n\n    <!--Execute Phase and Appraiser Role.\n\tChoose
+    copland phrase for Attester to execute, depending on\n\tresource requested-->\n\n
+    \   <rule role=\"appraiser\" phase=\"execute\">\n        <match_condition attr=\"resource\"
+    operator=\"is\" value=\"got_measure\"/>\n        <action selector_action=\"accept\">\n
+    \           <condition name=\"got_measure\" apb_phrase=\"((USM got) -> SIG)\"/>\n
+    \       </action>\n    </rule>\n\n    <rule role=\"appraiser\" phase=\"execute\">\n
+    \       <match_condition attr=\"resource\" operator=\"is\" value=\"invary\"/>\n
+    \       <action selector_action=\"accept\">\n            <condition name=\"runtime_appraiser\"
+    apb_phrase=\"@_1(@_1(@_2((INVARY m) -> SIG))):@_1=1,@_2=2\"/>\n        </action>\n
+    \   </rule>\n\n    <rule role=\"appraiser\" phase=\"execute\">\n        <match_condition
+    attr=\"resource\" operator=\"is\" value=\"amd_sev_snp\"/>\n        <action selector_action=\"accept\">\n
+    \           <condition name=\"amd_sev_snp_appraiser\" apb_phrase=\"@_1(@_1(@_2((AMD_SEV_SNP
+    m) -> SIG))):@_1=1,@_2=2\"/>\n        </action>\n    </rule>\n\n    <rule role=\"appraiser\"
+    phase=\"spawn\">\n        <match_condition attr=\"resource\" operator=\"is\" value=\"invary\"/>\n
+    \       <action selector_action=\"accept\">\n            <condition name=\"runtime_appraiser\"
+    apb_phrase=\"(INVARY app)\"/>\n        </action>\n    </rule>\n\n    <rule role=\"appraiser\"
+    phase=\"spawn\">\n        <match_condition attr=\"resource\" operator=\"is\" value=\"amd_sev_snp\"/>\n
+    \       <action selector_action=\"accept\">\n            <condition name=\"amd_sev_snp_appraiser\"
+    apb_phrase=\"(AMD_SEV_SNP app)\"/>\n        </action>\n    </rule>\n\n    <rule
+    role=\"appraiser\" phase=\"spawn\">\n        <match_condition attr=\"resource\"
+    operator=\"is\" value=\"userspace\"/>\n        <action selector_action=\"accept\">\n
+    \           <condition name=\"userspace_appraiser\"  apb_phrase=\"(USM app)\"/>\n
+    \       </action>\n    </rule>\n\n</selector_policy>\n"
+kind: ConfigMap
+metadata:
+  name: invary-selector.xml
+  namespace: invary

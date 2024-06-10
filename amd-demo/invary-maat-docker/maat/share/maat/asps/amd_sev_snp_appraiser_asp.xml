@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+# Copyright 2023 United States Government
+# Copyright 2024 Invary
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.*
+# See the License for the specific language governing permissions and
+# limitations under the License. 
+-->
+<asp>
+	<name>amd_sev_snp_appraiser_asp</name>
+	<uuid>ad0118ae-03e8-4045-93f9-98eb5c7cbcfa</uuid>
+	<type>Process</type>
+	<description>Appraise an AMD SEV-SNP measurement</description>
+	<usage> amd_sev_snp_appraiser_asp</usage>
+	<aspfile hash="XXXXXX">/opt/maat/lib/maat/asps/amd_sev_snp_appraiser_asp</aspfile>
+	<measurers>
+		<satisfier id="0">
+			<value name="type">GRAPH</value>
+			<capability target_type="amd_sev_snp_meas_target_type"
+						target_magic="0xFF1139CA"
+						target_desc="target type for AMD SEV-SNP data"
+						address_type="unit_address_space"
+						address_magic="0x50EC50EC"
+						address_desc="An instance of unit address type"
+						measurement_type="blob_measurement_type"
+						measurement_magic="0xB10BB10B"
+						measurement_desc="Opaque data type for transporting a generic buffer."
+			/>
+		</satisfier>
+	</measurers>
+	<security_context>
+	  <selinux><type>amd_sev_snp_appraiser_asp_t</type></selinux>
+	  <user>maat</user>
+	  <group>maat</group>
+	</security_context>
+</asp>

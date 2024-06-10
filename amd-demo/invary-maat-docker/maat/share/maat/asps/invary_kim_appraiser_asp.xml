@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+# Copyright 2023 United States Government
+# Copyright 2024 Invary
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.*
+# See the License for the specific language governing permissions and
+# limitations under the License. 
+-->
+<asp>
+	<name>invary_kim_appraiser_asp</name>
+	<uuid>a8292225-75a7-4f9e-b450-eb7af60a7d1b</uuid>
+	<type>Process</type>
+	<description>Appraise an Invary KIM measurement</description>
+	<usage>	invary_kim_appraiser_asp</usage>
+	<aspfile hash="XXXXXX">/opt/maat/lib/maat/asps/invary_kim_appraiser_asp</aspfile>
+	<measurers>
+		<satisfier id="0">
+			<value name="type">GRAPH</value>
+			<capability target_type="invary_runtime_meas_target_type"
+						target_magic="0xF20744DC"
+						target_desc="target type for invary kim data"
+						address_type="unit_address_space"
+						address_magic="0x50EC50EC"
+						address_desc="An instance of unit address type"
+						measurement_type="blob_measurement_type"
+						measurement_magic="0xB10BB10B"
+						measurement_desc="Opaque data type for transporting a generic buffer."
+			/>
+		</satisfier>
+	</measurers>
+	<security_context>
+	  <selinux><type>invary_kim_measure_asp_t</type></selinux>
+	  <user>maat</user>
+	  <group>maat</group>
+	</security_context>
+</asp>

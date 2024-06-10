@@ -1,0 +1,38 @@
+#!/bin/bash
+mkdir -p certs
+
+SNPGUEST=/opt/snpguest/bin/snpguest
+ENCODING=pem
+ENDORSER=vcek
+PROCESSOR_MODEL=Milan
+PROCESSOR_URL=Milan
+CERTS_DIR=./certs
+ATT_REPORT_PATH=./report.bin
+
+$SNPGUEST certificates $ENCODING $CERTS_DIR
+if [ "$?" -ne "0" ]; then
+    echo "Failed to fetch certificates"
+    exit 1
+fi
+
+curl --proto '=https' --tlsv1.2 -sSf https://kdsintf.amd.com/vlek/v1/Milan/cert_chain -o $CERTS_DIR/cert_chain.pem
+if [ "$?" -ne "0" ]; then
+    echo "Failed to fetch host cert chain"
+    exit 2
+fi
+
+openssl verify --CAfile $CERTS_DIR/cert_chain.pem $CERTS_DIR/vlek.pem
+if [ "$?" -ne "0" ]; then
+    echo "Failed to validate VLEK cert chain"
+    exit 3
+fi
+
+$SNPGUEST verify attestation $CERTS_DIR $ATT_REPORT_PATH
+if [ "$?" -ne "0" ]; then
+    echo "Failed to verify attestation"
+    exit 4
+fi
+
+
+exit 0
+

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+# Copyright 2023 United States Government
+# Copyright 2024 Invary
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License. 
+-->
+<apb>
+	<name>invary_appraiser</name>
+	<desc>Invary appraiser APB</desc>
+	<uuid>c37f2630-b388-47d3-aeeb-15f23e293062</uuid>
+	<file hash="XXXXX">/opt/maat/lib/maat/apbs/invary_appraiser_apb</file>
+	<input_type>????</input_type>
+	<output_type>????</output_type>
+	<asps ordered="False">
+		<asp uuid="a8292225-75a7-4f9e-b450-eb7af60a7d1b" initial="True">invary_kim_appraiser</asp>
+	</asps>
+	<copland>
+		<phrase copland="(INVARY app)">Invary measurement appraiser</phrase>
+		<spec uuid="74dc8763-4efd-439b-b7e2-42c66ae18b42">invary runtime measure</spec>
+	</copland>
+	<security_context>
+	  <selinux>
+	    <type>invary_appraiser_apb_t</type>
+	  </selinux>
+	</security_context>
+</apb>

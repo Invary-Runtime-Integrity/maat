@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: invary-maat
+  namespace: invary
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: invary-maat
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: invary-maat
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      restartPolicy: Always
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+      - name: invary-maat
+        image: MY_REGISTRY/invary-demo/invary-maat:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 32342
+          hostPort: 32342
+        resources:
+          limits:
+            memory: 4Gi
+            cpu: 8
+          requests:
+            memory: 2Gi
+            cpu: 100m
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          capabilities:
+            add:
+            - BPF
+            - PERFMON
+            - SYSLOG
+            - SYS_ADMIN
+        volumeMounts:
+        - mountPath: /tmp
+          name: sensor-tmpdir
+        - mountPath: /host/etc/os-release
+          mountPropagation: None
+          name: os-release
+          readOnly: true
+        - mountPath: /host/proc
+          mountPropagation: None
+          name: procdir
+          readOnly: true
+        - mountPath: /host/sys
+          mountPropagation: None
+          name: sys
+          readOnly: true
+        - mountPath: /dev/sev-guest
+          mountPropagation: None
+          name: sev-guest
+        - mountPath: /dev/cpu
+          mountPropagation: None
+          name: cpu
+        - name: invary-selector
+          mountPath: /opt/maat/share/maat/selector-configurations/invary-selector.xml
+          subPath: invary-selector.xml
+      tolerations:
+      - operator: "Exists"
+      volumes:
+      - emptyDir: {}
+        name: sensor-tmpdir
+      - hostPath:
+          path: /proc
+          type: ""
+        name: procdir
+      - hostPath:
+          path: /sys
+          type: ""
+        name: sys
+      - hostPath:
+          path: /etc/os-release
+          type: ""
+        name: os-release
+      - name: sev-guest
+        hostPath:
+          path: /dev/sev-guest
+          type: ""
+      - name: cpu 
+        hostPath:
+          path: /dev/cpu
+          type: ""
+      - name: invary-selector
+        configMap:
+          name: invary-selector.xml
+          items:
+          - key: invary-selector.xml
+            path: invary-selector.xml
+

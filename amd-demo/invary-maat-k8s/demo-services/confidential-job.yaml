@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pii-regulated
+  namespace: jobs
+  labels:
+    app: pii-regulated
+    confidential: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pii-regulated
+  template:
+    metadata:
+      labels:
+        app: pii-regulated
+        confidential: "true"
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: pi-regulated-web
+        image: nginx:1.26.0-perl
+        imagePullPolicy: IfNotPresent
+
