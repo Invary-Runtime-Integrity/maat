@@ -4,6 +4,16 @@ This software is meant to show how an attestation framework might combine the re
 integrity and AMD SEV-SNP memory integrity to drive operational changes to the servicing of workloads by a Kubernetes
 (K8S) cluster.
 
+# Mechanism
+
+This demo uses Kubernetes taints and tolerations to describe what workloads are acceptable to run on which nodes. 
+
+`LacksConfidentiality:true` means that SEV-SNP attestation could not be successfully verified
+`LacksIntegrity:true` means that Invary OS runtime integrity could not be successfully verified.
+
+The `demo-services` workloads specify in their deployment different tolerations of these taints to show how real
+workloads could be rebalanced at runtime based on their declared requirements.
+
 # Prerequisites
 
 ## AMD Hardware and Software
@@ -91,6 +101,10 @@ One example that works for a local Kubernetes dashboard:
 
     kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard-kong-proxy 8443:443
 
+## Demo Services Workloads
+
+    kubectl apply -k ./amd-demo/invary-maat-k8s/demo-services/
+
 ## Invary Maat DaemonSet
 
     kubectl apply -k ./amd-demo/invary-maat-k8s/invary-maat
@@ -116,6 +130,8 @@ This change will make sure you have a user that can access the dashboard. Tokens
     ./appraise
 
 ## Appraisal with Enforcement
+
+This is where workloads will actually begin shutting down and, if possible, migrating to other nodes in your cluster.
 
     ./appraise --enforce
 
