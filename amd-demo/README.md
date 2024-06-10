@@ -54,6 +54,16 @@ You will want a Kubernetes (K8S) cluster to install the components. The primary 
 
 Replace the value `MY_REGISTRY` with your Docker registry URL.
 
+## Let Maat and Maat controller know about your network topology
+
+For Maat, update the known-clients collection here:
+
+    ./amd-demo/invary-maat-docker/maat/share/maat/selector-configurations/invary-selector.xml
+
+For the Maat controller, update the node information here:
+
+    ./amd-demo/invary-maat-controller-docker/appraise
+
 ## Build Docker images
 
 Replace the value `MY_REGISTRY` with your Docker registry URL.
