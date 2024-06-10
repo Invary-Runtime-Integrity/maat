@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+# Copyright 2023 United States Government
+# Copyright 2024 Invary
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+-->
+<measurement_specification>
+    <name>AMD SEV-SNP measurement specification</name>
+    <uuid>e9dd931d-1826-4e90-b865-09d73efd73c4</uuid>
+    <description>
+        This is a measurement specification to perform an AMD SEV-SNP measurement.
+    </description>
+
+    <instructions>
+        <instruction type="simple" name="amd_sev_snp_meas">
+            <measurement_type name="blob_measurement_type" magic="0xB10BB10B" />
+            <target_type name="amd_sev_snp_meas_target_type" magic="0xFF1139CA"/>
+            <address_type name="unit_address_space" magic="0x50EC50EC" />
+        </instruction>
+    </instructions>
+
+    <variables>
+        <variable instruction="amd_sev_snp_meas">
+            <address operation="measure">all</address>
+        </variable>
+    </variables>
+</measurement_specification>

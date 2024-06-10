@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ops-reports
+  namespace: jobs
+  labels:
+    app: ops-reports
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ops-reports
+  template:
+    metadata:
+      labels:
+        app: ops-reports
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: ops-reports-web
+        image: nginx:1.26.0-perl
+        imagePullPolicy: IfNotPresent
+      tolerations:
+      - key: "LacksConfidentiality"
+        operator: "Exists"
+        effect: "NoExecute"
+

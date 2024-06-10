@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+# Copyright 2023 United States Government
+# Copyright 2024 Invary
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License. 
+-->
+<measurement_specification>
+	<name>Invary runtime measurement specification</name>
+	<uuid>74dc8763-4efd-439b-b7e2-42c66ae18b42</uuid>
+	<description>
+	  This is a measurement specification to perform an Invary runtime measurement.
+	</description>
+
+	<!-- The variables listed below are measured according to the instructions
+	     given here. Additional measurement variables are identified by retrieving 
+	     a 'feature' of a completed measurement, and are subsequently measured using 
+	     the referenced instruction.-->
+	<instructions>
+
+          <!-- Get runtime measurement of the kernel -->
+          <instruction type="simple" name="invary_runtime_meas">
+			  <measurement_type name="blob_measurement_type" magic="0xB10BB10B" />
+			  <target_type name="invary_runtime_meas_target_type" magic="0xF20744DC"/>
+			  <address_type name="unit_address_space" magic="0x50EC50EC" />
+          </instruction>
+
+	</instructions>
+
+	<variables>
+
+	  <variable instruction="invary_runtime_meas">
+		  <address operation="measure">all</address>
+	  </variable>
+
+	</variables>
+</measurement_specification>

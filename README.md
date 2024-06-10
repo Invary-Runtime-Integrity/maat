@@ -2,6 +2,7 @@ COPYRIGHT
 =========
 
 Copyright 2023 United States Government
+Copyright 2024 Invary
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +18,11 @@ limitations under the License.
 
 ABOUT
 ==============
+
+**This repository is a derivative work of (https://github.com/NationalSecurityAgency/maat)
+that is meant to show how Invary OS runtime integrity and AMD's SEV-SNP memory integrity
+can be used as part of an attestation framework that drives operational decisions.
+See [amd-demo](./amd-demo/README.md) for further details.**
 
 This repository contains the code for the prototype implementation of the Maat
 Measurement and Attestation Framework, as described in "A Platform Service for 

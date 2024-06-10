@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "You need to obtain a licensed or evaluation copy of Invary software to use this demo"
+exit 1

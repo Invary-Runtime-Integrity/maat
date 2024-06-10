@@ -1,0 +1,6 @@
+app:
+  tolerations:
+  - operator: Exists
+kong:
+  tolerations:
+  - operator: Exists

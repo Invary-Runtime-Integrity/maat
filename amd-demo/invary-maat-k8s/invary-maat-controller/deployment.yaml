@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invary-maat-controller
+  namespace: invary
+  labels:
+    app: invary-maat-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: invary-maat-controller
+  template:
+    metadata:
+      labels:
+        app: invary-maat-controller
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      hostname: invary-maat-controller
+      restartPolicy: Always
+      serviceAccountName: invary-maat-controller
+      containers:
+      - name: invary-maat-controller
+        image: MY_REGISTRY/invary-demo/invary-maat-controller:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          capabilities:
+            add:
+            - BPF
+            - PERFMON
+            - SYSLOG
+            - SYS_ADMIN
+        volumeMounts:
+        - mountPath: /tmp
+          name: sensor-tmpdir
+        - mountPath: /host/etc/os-release
+          mountPropagation: None
+          name: os-release
+          readOnly: true
+        - mountPath: /host/proc
+          mountPropagation: None
+          name: procdir
+          readOnly: true
+        - mountPath: /host/sys
+          mountPropagation: None
+          name: sys
+          readOnly: true
+        - mountPath: /dev/sev-guest
+          mountPropagation: None
+          name: sev-guest
+        - mountPath: /dev/cpu
+          mountPropagation: None
+          name: cpu
+        - name: appraise 
+          mountPath: /invary/appraise
+          subPath: appraise
+      tolerations:
+      -  operator: "Exists"
+      volumes:
+      - emptyDir: {}
+        name: sensor-tmpdir
+      - hostPath:
+          path: /proc
+          type: ""
+        name: procdir
+      - hostPath:
+          path: /sys
+          type: ""
+        name: sys
+      - hostPath:
+          path: /etc/os-release
+          type: ""
+        name: os-release
+      - name: sev-guest
+        hostPath:
+          path: /dev/sev-guest
+          type: ""
+      - name: cpu
+        hostPath:
+          path: /dev/cpu
+          type: ""
+      - name: appraise
+        configMap:
+          name: appraise
+          defaultMode: 0770
+          items:
+          - key: appraise
+            path: appraise
